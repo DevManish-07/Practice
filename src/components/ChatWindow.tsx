@@ -21,6 +21,7 @@ const ChatWindow: React.FC = () => {
   const [newMessage, setNewMessage] = useState('');
   const messageContainerRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
+  const trackMessageLength = useRef<number>(0);
 
   const [showDeleteButton, setShowDeleteButton] = useState(false);
 
@@ -28,25 +29,10 @@ const ChatWindow: React.FC = () => {
   const [uploadProgress, setUploadProgress] = useState(0);
   const [image, setImage] = useState<File | null>(null);
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
-  const messageSoundRef = useRef<HTMLAudioElement>(null);
-
-
-  const requestAudioPermission = async () => {
-    try {
-      const recognition = new SpeechRecognition();
-      await recognition.start();
-
-      // Audio permission granted
-      console.log("Audio permission granted");
-    } catch (error) {
-      // Audio permission denied or error occurred
-      console.log("Audio permission denied or error occurred");
-    }
-  };
+  const messageSoundRef = useRef<HTMLAudioElement>(null!);
 
   useEffect(() => {
-    requestAudioPermission();
-    const messageSound = new Audio("/notification.mp3");
+    // const messageSound = new Audio("/notification.mp3");
 
     const q = query(messagesRef, orderBy('timestamp'));
 
@@ -54,27 +40,31 @@ const ChatWindow: React.FC = () => {
       const fetchedMessages: Message[] = [];
       snapshot.forEach((doc: any) => {
         fetchedMessages.push({ id: doc.id, ...doc.data() } as Message);
-        console.log({ "asd": doc.data() })
       });
 
       snapshot.docChanges().forEach((change: any) => {
-        console.log("change.doc.data().sender", change.doc.data().userId, user?.email)
-        if (change.type === "added" && change.doc.data().userId !== user?.id) {
-          // Play audio when a new message is added
+        if (change.type === "added") {
           if (messageSoundRef.current) {
-            messageSound.play();
+            if (fetchedMessages.length === trackMessageLength.current + 1) {
+              if (fetchedMessages[fetchedMessages.length - 1].userId !== user?.email) {
+                console.log("if", fetchedMessages[fetchedMessages.length - 1].userId, user?.email)
+                messageSoundRef.current.muted = false;
+                messageSoundRef.current.play();
+              }
+            }
           }
         }
       })
 
       setMessages(fetchedMessages);
-      setTimeout(scrollToBottom, 10)
+      trackMessageLength.current = fetchedMessages.length;
+      setTimeout(scrollToBottom, 500)
     });
 
     return () => {
       unsubscribe();
-      messageSound.pause();
-      messageSound.currentTime = 0;
+      messageSoundRef.current.pause();
+      messageSoundRef.current.currentTime = 0;
     };
   }, []);
 
@@ -89,19 +79,13 @@ const ChatWindow: React.FC = () => {
 
   const scrollToBottom = () => {
     if (messageContainerRef.current) {
-      console.log("scroll")
       messageContainerRef.current.scrollTop = messageContainerRef.current.scrollHeight;
     }
   };
 
   const handleSendMessage = async () => {
-    // if (newMessage.trim() === '') {
-    //   return;
-    // }
-
     try {
       if (image) {
-        console.log(image)
         const storageRef = ref(getStorage(), `images/${image.name}`);
         const uploadTask = uploadBytesResumable(storageRef, image);
 
@@ -188,7 +172,9 @@ const ChatWindow: React.FC = () => {
         <ImageSelector handleImageChange={handleImageChange} />
         {uploadProgress > 0 && <progress value={uploadProgress} max="100" />}
         <button className='' onClick={handleSendMessage}><SendSvg /></button>
-        <audio ref={messageSoundRef} src="/path/to/message-sound.mp3" hidden />
+        <audio controls ref={messageSoundRef} hidden >
+          <source src="/notification.mp3" type="audio/mpeg" />
+        </audio>
       </div>
     </div >
   );
