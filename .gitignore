@@ -1,0 +1,48 @@
+# Dependencies
+/node_modules
+
+# Build files
+/build
+/dist
+
+# Environment variables
+.env
+
+# IDE/Editor files
+.vscode
+.idea
+*.iml
+*.ipr
+*.iws
+
+
+# Log files
+*.log
+
+# Cache and temporary files
+.cache
+.tmp
+
+# Miscellaneous
+.DS_Store
+Thumbs.db
+
+
+# Package Manager files
+package-lock.json
+
+# Coverage Reports
+/coverage
+
+# Environment variables
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Cache directories
+/.cache
+/cache
+/.gradle
+.gradle/
+/caches/
