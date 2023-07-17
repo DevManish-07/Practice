@@ -165,7 +165,7 @@ const ChatWindow: React.FC = () => {
         <div className='logout' onClick={logout}>Logout</div>
       </div>
 
-      <div className='messages-container' ref={messageContainerRef} style={{ overflowY: 'scroll' }}>
+      <div className='messages-container' ref={messageContainerRef} style={{ overflow: 'hidden', overflowY: 'scroll' }}>
         {/* <pre style={{ color: "#fff" }}>{JSON.stringify(messages, null, 2)}</pre> */}
         {messages.map((message, index) => (
           <div>
