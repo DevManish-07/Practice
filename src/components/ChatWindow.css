@@ -154,3 +154,17 @@ svg {
     margin-top: 7px;
 
 }
+
+.timestamp {
+    color: #f4f6f5;
+    font-size: 7px;
+    position: relative;
+    bottom: 10px;
+    right: -15px;
+}
+
+.timestamp.right {
+    right: 0;
+    margin: 1rem 1rem 1rem auto;
+    max-width: 11%;
+}

@@ -13,7 +13,7 @@ export interface User {
 }
 
 interface AuthContextType {
-    user: User | null;
+    user: User | null | { email: string };
     login: (email: string, password: string) => Promise<void>;
     logout: () => Promise<void>;
     isLoggedIn: boolean;
@@ -23,9 +23,10 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider = (props: AuthProviderProps) => {
-    const [user, setUser] = useState<User | null>(null);
+    const [user, setUser] = useState<User | null | { email: string }>({ email: "Me@gmail.com" });
     const [isLoggedIn, setisLoggedIn] = useState<boolean>(false);
-    const isiPhone12 = /iPhone\s/.test(navigator.userAgent);
+    const isiPhone12 = true;
+    // const isiPhone12 = /iPhone\s/.test(navigator.userAgent);
 
     const logout = async () => {
         try {

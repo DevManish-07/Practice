@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { User, useAuth } from "../context/userAuth";
-import { collection, query, orderBy, limit, getDocs, Timestamp, setDoc, doc, onSnapshot, serverTimestamp, deleteDoc, addDoc } from 'firebase/firestore';
+import { collection, query, orderBy, limit, getDocs, setDoc, doc, onSnapshot, serverTimestamp, deleteDoc, addDoc } from 'firebase/firestore';
 import { db } from "../firebase";
 import { useNavigate } from "react-router-dom";
 import { getStorage, ref, uploadBytes, getDownloadURL, uploadBytesResumable } from 'firebase/storage';
@@ -8,11 +8,16 @@ import { getStorage, ref, uploadBytes, getDownloadURL, uploadBytesResumable } fr
 
 import "./ChatWindow.css";
 
+interface Timestamp {
+  seconds: number;
+  nanoseconds: number;
+}
 interface Message {
   id?: string;
   text?: string;
   userId: string;
   imageUrl?: string;
+  timestamp: Timestamp
 }
 
 const ChatWindow: React.FC = () => {
@@ -63,7 +68,7 @@ const ChatWindow: React.FC = () => {
 
     return () => {
       unsubscribe();
-      messageSoundRef.current.pause();
+      messageSoundRef?.current?.pause();
       messageSoundRef.current.currentTime = 0;
     };
   }, []);
@@ -105,7 +110,7 @@ const ChatWindow: React.FC = () => {
           setImage(null);
         }
         );
-      } else {
+      } if (!!newMessage) {
         await setDoc(doc(messagesRef), {
           text: newMessage,
           userId: user!.email || '',
@@ -143,6 +148,17 @@ const ChatWindow: React.FC = () => {
     setSelectedImage(null);
   };
 
+
+  function formatTimestamp(timestamp: Timestamp): string {
+    const milliseconds: number = timestamp.seconds * 1000 + Math.floor(timestamp.nanoseconds / 1000000);
+    const date: Date = new Date(milliseconds);
+
+    const options: Intl.DateTimeFormatOptions = { day: 'numeric', month: 'long', year: 'numeric', hour: 'numeric', minute: 'numeric' };
+    const formattedDate: string = date.toLocaleString('en-US', options);
+
+    return formattedDate;
+  }
+  console.log()
   return (
     <div className='window-container'>
       <div className='input-box top-box'>
@@ -150,15 +166,19 @@ const ChatWindow: React.FC = () => {
       </div>
 
       <div className='messages-container' ref={messageContainerRef} style={{ overflowY: 'scroll' }}>
+        {/* <pre style={{ color: "#fff" }}>{JSON.stringify(messages, null, 2)}</pre> */}
         {messages.map((message, index) => (
-          <div className={`message ${message.userId == user?.email ? " parker" : ""}`} key={message.id}>
-            {message.imageUrl && <img width={100} src={message.imageUrl} className='uploadedImage' />}
-            <p onClick={toggleDeleteButton}>{message.text}</p>
-            {showDeleteButton &&
-              <div onClick={() => handleDeleteMessage(message.id!)} className={`message-feature-container ${message.userId == user?.email ? " right" : ""}`}>
-                <DeleteIcon></DeleteIcon>
-              </div>
-            }
+          <div>
+            <div className={`message ${message.userId == user?.email ? " parker" : ""}`} key={message.id}>
+              {message.imageUrl && <img width={100} src={message.imageUrl} className='uploadedImage' />}
+              <p onClick={toggleDeleteButton}>{message.text}</p>
+              {showDeleteButton &&
+                <div onClick={() => handleDeleteMessage(message.id!)} className={`message-feature-container ${message.userId == user?.email ? " right" : ""}`}>
+                  <DeleteIcon></DeleteIcon>
+                </div>
+              }
+            </div>
+            {message?.timestamp?.seconds && <p className={`timestamp ${message.userId == user?.email ? " right" : ""}`}>{formatTimestamp(message.timestamp)}</p>}
           </div>
         ))}
       </div>
